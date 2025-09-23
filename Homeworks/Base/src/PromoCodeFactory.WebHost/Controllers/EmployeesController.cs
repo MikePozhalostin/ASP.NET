@@ -24,6 +24,27 @@ namespace PromoCodeFactory.WebHost.Controllers
         }
 
         /// <summary>
+        /// Создать нового сотрудника
+        /// </summary>
+        /// <param name="employeeRequest">Данные по сотруднику</param>
+        /// <returns>Новый сотрудник</returns>
+        [HttpPost]
+        public async Task<ActionResult<EmployeeResponse>> CreateEmployeeAsync([FromBody] EmployeeRequest employeeRequest)
+        {
+            // Mapper EmployeeRequest -> Employee
+            // var entity = Mapper(employeeRequest);
+            // return await _employeeRepository.Add(entity);
+
+            var newEmployee = (await _employeeRepository.GetAllAsync()).First();
+
+            return StatusCode(201, new EmployeeResponse {
+                Id = newEmployee.Id,
+                Email = newEmployee.Email,
+                FullName = newEmployee.FullName,
+            });
+        }
+
+        /// <summary>
         /// Получить данные всех сотрудников
         /// </summary>
         /// <returns></returns>
@@ -69,6 +90,41 @@ namespace PromoCodeFactory.WebHost.Controllers
             };
 
             return employeeModel;
+        }
+
+        /// <summary>
+        /// Обновление данных сотрудника
+        /// </summary>
+        /// <param name="updateEmployeeRequest">Данные для обновления</param>
+        [HttpPut]
+        public async Task<IActionResult> UpdateEmployeeAsync(UpdateEmployeeRequest updateEmployeeRequest)
+        {
+            var employee = await _employeeRepository.GetByIdAsync(updateEmployeeRequest.Id);
+
+            if (employee == null)
+                return NotFound();
+
+            // Mapper: updateEmployeeRequest -> Employee
+            // await _employeeRepository.Update(Mapper(updateEmployeeRequest))
+
+            return Ok();
+        }
+
+        /// <summary>
+        /// Удалить сотрудника
+        /// </summary>
+        /// <param name="id">Id сотрудника</param>
+        [HttpDelete]
+        public async Task<IActionResult> DeleteEmployeeByIdAsync(Guid id)
+        {
+            var employee = await _employeeRepository.GetByIdAsync(id);
+
+            if (employee == null)
+                return NotFound();
+
+            // await _employeeRepository.Delete(id))
+
+            return Ok();
         }
     }
 }
