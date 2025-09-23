@@ -114,7 +114,7 @@ namespace PromoCodeFactory.WebHost.Controllers
         /// Удалить сотрудника
         /// </summary>
         /// <param name="id">Id сотрудника</param>
-        [HttpDelete]
+        [HttpDelete("{id:guid}")]
         public async Task<IActionResult> DeleteEmployeeByIdAsync(Guid id)
         {
             var employee = await _employeeRepository.GetByIdAsync(id);
