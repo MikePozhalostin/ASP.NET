@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using PromoCodeFactory.Core.Abstractions.Repositories;
+using PromoCodeFactory.Core.Domain;
 using PromoCodeFactory.Core.Domain.Administration;
 using PromoCodeFactory.Core.Domain.PromoCodeManagement;
 using PromoCodeFactory.DataAccess.Data;
@@ -25,6 +27,10 @@ namespace PromoCodeFactory.WebHost
                 new InMemoryRepository<Preference>(FakeDataFactory.Preferences));
             services.AddScoped(typeof(IRepository<Customer>), (x) =>
                 new InMemoryRepository<Customer>(FakeDataFactory.Customers));
+
+            services.AddDbContext<DataContext>();
+
+            services.AddScoped<IRepository<BaseEntity>, EfRepository<BaseEntity>>();
 
             services.AddOpenApiDocument(options =>
             {
