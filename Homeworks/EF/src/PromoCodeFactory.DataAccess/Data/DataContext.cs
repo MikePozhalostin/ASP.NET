@@ -21,12 +21,51 @@ namespace PromoCodeFactory.DataAccess.Data
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.UseSqlite("Filename=MyDatabase.db");
+            optionsBuilder.UseSqlite("Data Source=MyDatabase.db");
             base.OnConfiguring(optionsBuilder);
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<CustomerPreference>().HasKey(cp => new { cp.CustomerId, cp.PreferenceId });
+
+            modelBuilder.Entity<CustomerPreference>()
+                .HasOne(cp => cp.Customer)
+                .WithMany(c => c.CustomerPreferences)
+                .HasForeignKey(cp => cp.CustomerId);
+
+            modelBuilder.Entity<CustomerPreference>()
+                .HasOne(cp => cp.Preference)
+                .WithMany(p => p.CustomerPreferences)
+                .HasForeignKey(cp => cp.PreferenceId);
+
+            modelBuilder.Entity<Customer>()
+                .HasMany(cp => cp.PromoCodes)
+                .WithOne(p => p.Customer)
+                .HasForeignKey(p => p.CustomerId);
+
+            modelBuilder.Entity<Customer>().Property(p => p.FirstName).HasMaxLength(50);
+            modelBuilder.Entity<Customer>().Property(p => p.LastName).HasMaxLength(100);
+            modelBuilder.Entity<Customer>().Property(p => p.Email).HasMaxLength(200);
+            modelBuilder.Entity<Customer>().Ignore(p => p.FullName);
+
+            modelBuilder.Entity<Preference>().Property(p => p.Name).HasMaxLength(100);
+
+            modelBuilder.Entity<PromoCode>().HasOne(p => p.Preference);
+            modelBuilder.Entity<PromoCode>().HasOne(p => p.PartnerManager);
+            modelBuilder.Entity<PromoCode>().Property(p => p.Code).HasMaxLength(50);
+            modelBuilder.Entity<PromoCode>().Property(p => p.ServiceInfo).HasMaxLength(100);
+            modelBuilder.Entity<PromoCode>().Property(p => p.PartnerName).HasMaxLength(200);
+
+            modelBuilder.Entity<Role>().Property(p => p.Name).HasMaxLength(100);
+            modelBuilder.Entity<Role>().Property(p => p.Description).HasMaxLength(200);
+
+            modelBuilder.Entity<Employee>().HasOne(e => e.Role);
+            modelBuilder.Entity<Employee>().Property(e => e.Email).HasMaxLength(100);
+            modelBuilder.Entity<Employee>().Property(e => e.FirstName).HasMaxLength(100);
+            modelBuilder.Entity<Employee>().Property(e => e.LastName).HasMaxLength(200);
+            modelBuilder.Entity<Employee>().Ignore(e => e.FullName);
+
             base.OnModelCreating(modelBuilder);
         }
     }

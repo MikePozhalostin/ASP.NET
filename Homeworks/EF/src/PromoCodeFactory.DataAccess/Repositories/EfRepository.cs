@@ -18,7 +18,7 @@ namespace PromoCodeFactory.DataAccess.Repositories
 
         public async Task CreateAsync(T entity)
         {
-            var result = await _dataContext.Set<T>().AddAsync(entity);
+            await _dataContext.Set<T>().AddAsync(entity);
             await _dataContext.SaveChangesAsync();
         }
 
