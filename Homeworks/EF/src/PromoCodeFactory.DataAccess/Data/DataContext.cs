@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using PromoCodeFactory.Core.Domain.Administration;
 using PromoCodeFactory.Core.Domain.PromoCodeManagement;
+using PromoCodeFactory.DataAccess.Repositories;
 
 namespace PromoCodeFactory.DataAccess.Data
 {
@@ -13,15 +14,20 @@ namespace PromoCodeFactory.DataAccess.Data
         public DbSet<Preference> Preferences { get; set; }
         public DbSet<PromoCode> PromoCodes { get; set; }
 
-        public DataContext(DbContextOptions dbContextOptions) : base(dbContextOptions)
+        public DataContext()
         {
             Database.EnsureDeleted();
             Database.EnsureCreated();
+            DataContextInitializer.Seed();
+        }
+
+        public DataContext(DbContextOptions dbContextOptions) : base(dbContextOptions)
+        {
+
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.UseSqlite("Data Source=MyDatabase.db");
             base.OnConfiguring(optionsBuilder);
         }
 
@@ -35,9 +41,7 @@ namespace PromoCodeFactory.DataAccess.Data
                 .HasForeignKey(cp => cp.CustomerId);
 
             modelBuilder.Entity<CustomerPreference>()
-                .HasOne(cp => cp.Preference)
-                .WithMany(p => p.CustomerPreferences)
-                .HasForeignKey(cp => cp.PreferenceId);
+                .HasOne(cp => cp.Preference);
 
             modelBuilder.Entity<Customer>()
                 .HasMany(cp => cp.PromoCodes)

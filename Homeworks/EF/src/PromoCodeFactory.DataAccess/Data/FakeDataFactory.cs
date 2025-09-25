@@ -78,7 +78,11 @@ namespace PromoCodeFactory.DataAccess.Data
                         Email = "ivan_sergeev@mail.ru",
                         FirstName = "Иван",
                         LastName = "Петров",
-                        //TODO: Добавить предзаполненный список предпочтений
+                        CustomerPreferences = new List<CustomerPreference>
+                        {
+                            new CustomerPreference { Preference = Preferences.First(p => p.Name == "Семья") },
+                            new CustomerPreference { Preference = Preferences.First(p => p.Name == "Дети") }
+                        }
                     }
                 };
 

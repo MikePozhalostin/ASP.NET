@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using PromoCodeFactory.Core.Abstractions.Repositories;
@@ -16,7 +17,11 @@ namespace PromoCodeFactory.WebHost
         {
             services.AddControllers();
 
-            services.AddDbContext<DataContext>();
+            services.AddDbContext<DataContext>(d =>
+            {
+                d.UseSqlite("Data Source=MyDatabase.db");
+                d.UseLazyLoadingProxies();
+            });
 
             services.AddScoped(typeof(IRepository<>), typeof(EfRepository<>));
 

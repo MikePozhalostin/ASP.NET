@@ -18,9 +18,11 @@ namespace PromoCodeFactory.WebHost.Controllers
         : ControllerBase
     {
         private readonly IRepository<Customer> _repository;
-        public CustomersController(IRepository<Customer> repository)
+        private readonly IRepository<Preference> _prefRepository;
+        public CustomersController(IRepository<Customer> repository, IRepository<Preference> prefRepository)
         {
             _repository = repository ?? throw new ArgumentNullException(nameof(repository));
+            _prefRepository = prefRepository ?? throw new ArgumentNullException(nameof(prefRepository));
         }
 
         /// <summary>
@@ -61,7 +63,7 @@ namespace PromoCodeFactory.WebHost.Controllers
                 Email = customer.Email,
                 FirstName = customer.FirstName,
                 Id = customer.Id,
-                PromoCodes = customer.PromoCodes.Select(p => new PromoCodeShortResponse
+                PromoCodes = customer.PromoCodes?.Select(p => new PromoCodeShortResponse
                 {
                     Id = p.Id,
                     BeginDate = p.BeginDate.ToShortDateString(),
@@ -70,6 +72,11 @@ namespace PromoCodeFactory.WebHost.Controllers
                     PartnerName = p.PartnerName,
                     ServiceInfo = p.ServiceInfo
                 }).ToList(),
+                Preferences = customer.CustomerPreferences?.Select(cp => new Preference
+                {
+                    Id = cp.Preference.Id,
+                    Name = cp.Preference.Name,
+                }).ToList()
             });
         }
 
@@ -80,6 +87,7 @@ namespace PromoCodeFactory.WebHost.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateCustomerAsync(CreateOrEditCustomerRequest request)
         {
+            var preferensies = await _prefRepository.GetAllAsync();
             await _repository.CreateAsync(new Customer
             {
                 Email = request.Email,
@@ -87,7 +95,7 @@ namespace PromoCodeFactory.WebHost.Controllers
                 LastName = request.LastName,
                 CustomerPreferences = request.PreferenceIds.Select(p => new CustomerPreference
                 {
-                    PreferenceId = p
+                    Preference = preferensies.FirstOrDefault(pr => pr.Id == p)
                 }).ToList()
             });
             return Ok();
@@ -103,6 +111,7 @@ namespace PromoCodeFactory.WebHost.Controllers
         {
             try
             {
+                var preferensies = await _prefRepository.GetAllAsync();
                 await _repository.UpdateAsync(new Customer
                 {
                     Id = id,
@@ -111,7 +120,7 @@ namespace PromoCodeFactory.WebHost.Controllers
                     LastName= request.LastName,
                     CustomerPreferences = request.PreferenceIds.Select(p => new CustomerPreference
                     {
-                        PreferenceId = p
+                        Preference = preferensies.FirstOrDefault(pr => pr.Id == p)
                     }).ToList()
                 });
                 return Ok();

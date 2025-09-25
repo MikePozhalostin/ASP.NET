@@ -10,8 +10,8 @@ namespace PromoCodeFactory.Core.Domain.PromoCodeManagement
         public string FullName => $"{FirstName} {LastName}";
         public string Email { get; set; }
 
-        public ICollection<PromoCode> PromoCodes { get; set; }
+        public virtual ICollection<PromoCode> PromoCodes { get; set; }
 
-        public ICollection<CustomerPreference> CustomerPreferences { get; set; }
+        public virtual ICollection<CustomerPreference> CustomerPreferences { get; set; }
     }
 }

@@ -39,17 +39,8 @@ namespace PromoCodeFactory.DataAccess.Repositories
 
         public async Task UpdateAsync(T entity)
         {
-            var existEntity = await GetByIdAsync(entity.Id);
-
-            if (existEntity != null)
-            {
-                _dataContext.Set<T>().Update(existEntity);
-                await _dataContext.SaveChangesAsync();
-            }
-            else
-            {
-                throw new KeyNotFoundException("Entity not found");
-            }
+            _dataContext.Set<T>().Update(entity);
+            await _dataContext.SaveChangesAsync();
         }
 
         public async Task<IEnumerable<T>> GetAllAsync()
@@ -59,7 +50,7 @@ namespace PromoCodeFactory.DataAccess.Repositories
 
         public async Task<T> GetByIdAsync(Guid id)
         {
-            return await _dataContext.Set<T>().FirstOrDefaultAsync();
+            return await _dataContext.Set<T>().FirstOrDefaultAsync(d => d.Id == id);
         }
     }
 }
