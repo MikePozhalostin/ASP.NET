@@ -16,10 +16,12 @@ namespace PromoCodeFactory.DataAccess.Repositories
             _dataContext = dataContext;
         }
 
-        public async Task CreateAsync(T entity)
+        public async Task<T> CreateAsync(T entity)
         {
-            await _dataContext.Set<T>().AddAsync(entity);
+            var res = await _dataContext.Set<T>().AddAsync(entity);
             await _dataContext.SaveChangesAsync();
+
+            return res.Entity;
         }
 
         public async Task DeleteByIdAsync(Guid id)

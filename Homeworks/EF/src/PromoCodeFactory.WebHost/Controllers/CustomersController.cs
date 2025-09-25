@@ -17,11 +17,11 @@ namespace PromoCodeFactory.WebHost.Controllers
     public class CustomersController
         : ControllerBase
     {
-        private readonly IRepository<Customer> _repository;
+        private readonly IRepository<Customer> _customersRepository;
         private readonly IRepository<Preference> _prefRepository;
-        public CustomersController(IRepository<Customer> repository, IRepository<Preference> prefRepository)
+        public CustomersController(IRepository<Customer> customersRepository, IRepository<Preference> prefRepository)
         {
-            _repository = repository ?? throw new ArgumentNullException(nameof(repository));
+            _customersRepository = customersRepository ?? throw new ArgumentNullException(nameof(customersRepository));
             _prefRepository = prefRepository ?? throw new ArgumentNullException(nameof(prefRepository));
         }
 
@@ -32,7 +32,7 @@ namespace PromoCodeFactory.WebHost.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<CustomerShortResponse>>> GetCustomersAsync()
         {
-            var customerEntities = await _repository.GetAllAsync();
+            var customerEntities = await _customersRepository.GetAllAsync();
             return Ok(customerEntities.Select(c => new CustomerShortResponse
             {
                 Email = c.Email,
@@ -50,7 +50,7 @@ namespace PromoCodeFactory.WebHost.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<CustomerResponse>> GetCustomerAsync(Guid id)
         {
-            var customer = await _repository.GetByIdAsync(id);
+            var customer = await _customersRepository.GetByIdAsync(id);
 
             if (customer == null)
             {
@@ -88,7 +88,7 @@ namespace PromoCodeFactory.WebHost.Controllers
         public async Task<IActionResult> CreateCustomerAsync(CreateOrEditCustomerRequest request)
         {
             var preferensies = await _prefRepository.GetAllAsync();
-            await _repository.CreateAsync(new Customer
+            await _customersRepository.CreateAsync(new Customer
             {
                 Email = request.Email,
                 FirstName= request.FirstName,
@@ -112,7 +112,7 @@ namespace PromoCodeFactory.WebHost.Controllers
             try
             {
                 var preferensies = await _prefRepository.GetAllAsync();
-                await _repository.UpdateAsync(new Customer
+                await _customersRepository.UpdateAsync(new Customer
                 {
                     Id = id,
                     Email = request.Email,
@@ -137,7 +137,7 @@ namespace PromoCodeFactory.WebHost.Controllers
         {
             try
             {
-                await _repository.DeleteByIdAsync(id);
+                await _customersRepository.DeleteByIdAsync(id);
                 return Ok();
             }
             catch (KeyNotFoundException) { return NotFound(); }

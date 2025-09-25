@@ -1,32 +1,30 @@
 ﻿using PromoCodeFactory.DataAccess.Data;
 using System;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace PromoCodeFactory.DataAccess.Repositories
 {
     public static class DataContextInitializer
     {
-        public static void Seed()
+        public async static Task SeedAsync(DataContext context, CancellationToken ct)
         {
-            using var context = new DataContext();
-
-            var transaction = context.Database.BeginTransaction();
-
             try
             {
-                context.Preferences.AddRange(FakeDataFactory.Preferences);
-                context.SaveChanges();
+                await context.Preferences.AddRangeAsync(FakeDataFactory.Preferences, ct);
+                await context.SaveChangesAsync(ct);
 
-                context.Roles.AddRange(FakeDataFactory.Roles);
-                context.SaveChanges();
+                await context.Roles.AddRangeAsync(FakeDataFactory.Roles, ct);
+                await context.SaveChangesAsync(ct);
 
                 var employees = FakeDataFactory.Employees.ToList();
                 foreach (var employee in employees)
                 {
                     employee.Role = context.Roles.First(r => r.Name == employee.Role.Name);
                 }
-                context.Employees.AddRange(employees);
-                context.SaveChanges();
+                await context.Employees.AddRangeAsync(employees, ct);
+                await context.SaveChangesAsync(ct);
 
                 var customers = FakeDataFactory.Customers.ToList();
                 foreach (var customer in customers)
@@ -36,13 +34,11 @@ namespace PromoCodeFactory.DataAccess.Repositories
                         pref.Preference = context.Preferences.First(p => p.Name == pref.Preference.Name);
                     }
                 }
-                context.Customers.AddRange(customers);
-                context.SaveChanges();
-                transaction.Commit();
+                await context.Customers.AddRangeAsync(customers, ct);
+                await context.SaveChangesAsync(ct);
             }
             catch (Exception)
             {
-                transaction.Rollback();
                 throw;
             }
         }

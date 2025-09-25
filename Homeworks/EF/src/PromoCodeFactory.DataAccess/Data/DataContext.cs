@@ -16,14 +16,11 @@ namespace PromoCodeFactory.DataAccess.Data
 
         public DataContext()
         {
-            Database.EnsureDeleted();
-            Database.EnsureCreated();
-            DataContextInitializer.Seed();
+            
         }
 
         public DataContext(DbContextOptions dbContextOptions) : base(dbContextOptions)
         {
-
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

@@ -21,6 +21,7 @@ namespace PromoCodeFactory.WebHost
             {
                 d.UseSqlite("Data Source=MyDatabase.db");
                 d.UseLazyLoadingProxies();
+                d.UseAsyncSeeding(async (context, _, ct) => await DataContextInitializer.SeedAsync((DataContext)context, ct));
             });
 
             services.AddScoped(typeof(IRepository<>), typeof(EfRepository<>));
@@ -49,6 +50,12 @@ namespace PromoCodeFactory.WebHost
             {
                 x.DocExpansion = "list";
             });
+
+            using var scope = app.ApplicationServices.CreateScope();
+            // Create a scope to obtain a reference to the database context (Context)
+            var db = scope.ServiceProvider.GetRequiredService<DataContext>();
+            db.Database.EnsureDeletedAsync();
+            db.Database.EnsureCreatedAsync();
 
             app.UseHttpsRedirection();
 
