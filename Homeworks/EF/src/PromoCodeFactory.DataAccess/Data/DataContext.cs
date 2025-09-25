@@ -42,7 +42,8 @@ namespace PromoCodeFactory.DataAccess.Data
             modelBuilder.Entity<Customer>()
                 .HasMany(cp => cp.PromoCodes)
                 .WithOne(p => p.Customer)
-                .HasForeignKey(p => p.CustomerId);
+                .HasForeignKey(p => p.CustomerId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<Customer>().Property(p => p.FirstName).HasMaxLength(50);
             modelBuilder.Entity<Customer>().Property(p => p.LastName).HasMaxLength(100);

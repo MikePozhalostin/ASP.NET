@@ -23,6 +23,10 @@ namespace PromoCodeFactory.WebHost.Controllers
             _repository = repository ?? throw new ArgumentNullException(nameof(repository));
         }
 
+        /// <summary>
+        /// Получить список клиентов
+        /// </summary>
+        /// <returns>Список клиентов</returns>
         [HttpGet]
         public async Task<ActionResult<IEnumerable<CustomerShortResponse>>> GetCustomersAsync()
         {
@@ -36,6 +40,11 @@ namespace PromoCodeFactory.WebHost.Controllers
             }));
         }
 
+        /// <summary>
+        /// Получить клиента по id
+        /// </summary>
+        /// <param name="id">Id Клиента</param>
+        /// <returns>Клиент</returns>
         [HttpGet("{id}")]
         public async Task<ActionResult<CustomerResponse>> GetCustomerAsync(Guid id)
         {
@@ -64,6 +73,10 @@ namespace PromoCodeFactory.WebHost.Controllers
             });
         }
 
+        /// <summary>
+        /// Зарегистрировать клиента
+        /// </summary>
+        /// <param name="request">Данные по клиенту</param>
         [HttpPost]
         public async Task<IActionResult> CreateCustomerAsync(CreateOrEditCustomerRequest request)
         {
@@ -80,6 +93,11 @@ namespace PromoCodeFactory.WebHost.Controllers
             return Ok();
         }
 
+        /// <summary>
+        /// Редактировать данные по клиенту
+        /// </summary>
+        /// <param name="id">Id клиента</param>
+        /// <param name="request">Данные по обновлению</param>
         [HttpPut("{id}")]
         public async Task<IActionResult> EditCustomersAsync(Guid id, CreateOrEditCustomerRequest request)
         {
@@ -101,6 +119,10 @@ namespace PromoCodeFactory.WebHost.Controllers
             catch (KeyNotFoundException) { return NotFound(); }
         }
 
+        /// <summary>
+        /// Удалить клиента
+        /// </summary>
+        /// <param name="id">Id клиента</param>
         [HttpDelete]
         public async Task<IActionResult> DeleteCustomer(Guid id)
         {
