@@ -53,8 +53,8 @@ namespace PromoCodeFactory.DataAccess.Data
 
             modelBuilder.Entity<Preference>().Property(p => p.Name).HasMaxLength(100);
 
-            modelBuilder.Entity<PromoCode>().HasOne(p => p.Preference);
-            modelBuilder.Entity<PromoCode>().HasOne(p => p.PartnerManager);
+            modelBuilder.Entity<PromoCode>().HasOne(p => p.Preference).WithMany().HasForeignKey(p => p.PreferenceId);
+            modelBuilder.Entity<PromoCode>().HasOne(p => p.PartnerManager).WithMany().HasForeignKey(p => p.ManagerId);
             modelBuilder.Entity<PromoCode>().Property(p => p.Code).HasMaxLength(50);
             modelBuilder.Entity<PromoCode>().Property(p => p.ServiceInfo).HasMaxLength(100);
             modelBuilder.Entity<PromoCode>().Property(p => p.PartnerName).HasMaxLength(200);

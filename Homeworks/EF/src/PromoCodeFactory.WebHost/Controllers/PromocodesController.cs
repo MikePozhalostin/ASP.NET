@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using PromoCodeFactory.Core.Abstractions.Repositories;
+using PromoCodeFactory.Core.Domain.Administration;
 using PromoCodeFactory.Core.Domain.PromoCodeManagement;
 using PromoCodeFactory.WebHost.Models;
 using System;
@@ -20,12 +21,14 @@ namespace PromoCodeFactory.WebHost.Controllers
         private readonly IRepository<Customer> _customersRepository;
         private readonly IRepository<PromoCode> _promoRepository;
         private readonly IRepository<Preference> _prefRepository;
+        private readonly IRepository<Employee> _empRepository;
 
-        public PromocodesController(IRepository<Customer> customersRepository, IRepository<PromoCode> promoRepository, IRepository<Preference> prefRepository)
+        public PromocodesController(IRepository<Customer> customersRepository, IRepository<PromoCode> promoRepository, IRepository<Preference> prefRepository, IRepository<Employee> empRepository)
         {
             _customersRepository = customersRepository ?? throw new ArgumentNullException(nameof(customersRepository));
             _promoRepository = promoRepository ?? throw new ArgumentNullException(nameof(promoRepository));
             _prefRepository = prefRepository ?? throw new ArgumentNullException(nameof(prefRepository));
+            _empRepository = empRepository ?? throw new ArgumentNullException(nameof(empRepository));
         }
 
         /// <summary>
@@ -56,30 +59,23 @@ namespace PromoCodeFactory.WebHost.Controllers
         public async Task<IActionResult> GivePromoCodesToCustomersWithPreferenceAsync(GivePromoCodeRequest request)
         {
             var preferences = await _prefRepository.GetAllAsync();
+            var employes = await _empRepository.GetAllAsync();
+            var customers = await _customersRepository.GetAllAsync();
             var currentPref = preferences.FirstOrDefault(p => request.Preference == p.Name);
+            var customer = customers.FirstOrDefault(c => c.CustomerPreferences.FirstOrDefault(cp => cp.PreferenceId == currentPref.Id) != null);
+            var currentEmployee = employes.FirstOrDefault(e => e.FirstName == request.PartnerName);
 
             var newPromoCode = await _promoRepository.CreateAsync(new PromoCode
             {
                 ServiceInfo = request.ServiceInfo,
-                PartnerName = request.PartnerName,
+                PartnerName = currentEmployee.FullName,
                 Code = request.PromoCode,
                 BeginDate = DateTime.Now,
                 EndDate = DateTime.Now.AddDays(1),
-                Preference = currentPref
+                PreferenceId = currentPref.Id,
+                ManagerId = currentEmployee.Id,
+                CustomerId = customer.Id
             });
-
-            var customers = await _customersRepository.GetAllAsync();
-
-            var customersForUpdate = customers.Where(c => c.CustomerPreferences.FirstOrDefault(cp => cp.PreferenceId == currentPref.Id) != null);
-
-            if (customersForUpdate.Any())
-            {
-                foreach (var customer in customersForUpdate)
-                {
-                    customer.PromoCodes.Add(newPromoCode);
-                    await _customersRepository.UpdateAsync(customer);
-                }
-            }
 
             return Ok();
         }
