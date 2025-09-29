@@ -31,17 +31,21 @@ namespace PromoCodeFactory.WebHost.Controllers
         [HttpPost]
         public async Task<ActionResult<EmployeeResponse>> CreateEmployeeAsync([FromBody] EmployeeRequest employeeRequest)
         {
-            // Mapper EmployeeRequest -> Employee
-            // var entity = Mapper(employeeRequest);
-            // return await _employeeRepository.Add(entity);
+            try
+            {
+                await _employeeRepository.AddAsync(new Employee
+                {
+                    LastName = employeeRequest.LastName,
+                    FirstName = employeeRequest.FirstName,
+                    Email = employeeRequest.Email,
+                });
 
-            var newEmployee = (await _employeeRepository.GetAllAsync()).First();
-
-            return StatusCode(201, new EmployeeResponse {
-                Id = newEmployee.Id,
-                Email = newEmployee.Email,
-                FullName = newEmployee.FullName,
-            });
+                return StatusCode(201);
+            }
+            catch (Exception)
+            {
+                return BadRequest();
+            }
         }
 
         /// <summary>
@@ -71,25 +75,32 @@ namespace PromoCodeFactory.WebHost.Controllers
         [HttpGet("{id:guid}")]
         public async Task<ActionResult<EmployeeResponse>> GetEmployeeByIdAsync(Guid id)
         {
-            var employee = await _employeeRepository.GetByIdAsync(id);
-
-            if (employee == null)
-                return NotFound();
-
-            var employeeModel = new EmployeeResponse()
+            try
             {
-                Id = employee.Id,
-                Email = employee.Email,
-                Roles = employee.Roles.Select(x => new RoleItemResponse()
-                {
-                    Name = x.Name,
-                    Description = x.Description
-                }).ToList(),
-                FullName = employee.FullName,
-                AppliedPromocodesCount = employee.AppliedPromocodesCount
-            };
+                var employee = await _employeeRepository.GetByIdAsync(id);
 
-            return employeeModel;
+                if (employee == null)
+                    return NotFound();
+
+                var employeeModel = new EmployeeResponse()
+                {
+                    Id = employee.Id,
+                    Email = employee.Email,
+                    Roles = employee.Roles.Select(x => new RoleItemResponse()
+                    {
+                        Name = x.Name,
+                        Description = x.Description
+                    }).ToList(),
+                    FullName = employee.FullName,
+                    AppliedPromocodesCount = employee.AppliedPromocodesCount
+                };
+
+                return employeeModel;
+            }
+            catch (Exception)
+            {
+                return BadRequest();
+            }
         }
 
         /// <summary>
@@ -99,15 +110,27 @@ namespace PromoCodeFactory.WebHost.Controllers
         [HttpPut]
         public async Task<IActionResult> UpdateEmployeeAsync(UpdateEmployeeRequest updateEmployeeRequest)
         {
-            var employee = await _employeeRepository.GetByIdAsync(updateEmployeeRequest.Id);
+            try
+            {
+                var employee = await _employeeRepository.GetByIdAsync(updateEmployeeRequest.Id);
 
-            if (employee == null)
-                return NotFound();
+                if (employee == null)
+                    return NotFound();
 
-            // Mapper: updateEmployeeRequest -> Employee
-            // await _employeeRepository.Update(Mapper(updateEmployeeRequest))
+                await _employeeRepository.UpdateAsync(new Employee
+                {
+                    Id = updateEmployeeRequest.Id,
+                    Email = updateEmployeeRequest.Email,
+                    FirstName = updateEmployeeRequest.FirstName,
+                    LastName = updateEmployeeRequest.LastName,
+                });
 
-            return Ok();
+                return Ok();
+            }
+            catch (Exception)
+            {
+                return BadRequest();
+            }
         }
 
         /// <summary>
@@ -117,14 +140,21 @@ namespace PromoCodeFactory.WebHost.Controllers
         [HttpDelete("{id:guid}")]
         public async Task<IActionResult> DeleteEmployeeByIdAsync(Guid id)
         {
-            var employee = await _employeeRepository.GetByIdAsync(id);
+            try
+            {
+                var employee = await _employeeRepository.GetByIdAsync(id);
 
-            if (employee == null)
-                return NotFound();
+                if (employee == null)
+                    return NotFound();
 
-            // await _employeeRepository.Delete(id))
+                await _employeeRepository.DeleteAsync(id);
 
-            return Ok();
+                return Ok();
+            }
+            catch (Exception)
+            {
+                return BadRequest();
+            }
         }
     }
 }
