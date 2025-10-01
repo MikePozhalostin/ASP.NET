@@ -1,0 +1,25 @@
+services:
+  promocodefactory.webhost:
+    image: ${DOCKER_REGISTRY-}promocodefactorywebhost
+    build:
+      context: .
+      dockerfile: PromoCodeFactory.WebHost/Dockerfile
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:latest
+    container_name: postgres_container
+    restart: always
+    ports:
+      - 5434:5432
+    environment:
+      POSTGRES_DB: postgres_db
+      POSTGRES_USER: postgres_user
+      POSTGRES_PASSWORD: postgres_pas
+      PGDATA: /var/lib/postgresql/promo
+    volumes:
+      - db:/var/lib/postgresql/promo
+
+volumes:
+  db:
