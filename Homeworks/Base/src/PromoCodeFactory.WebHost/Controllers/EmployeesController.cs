@@ -24,6 +24,31 @@ namespace PromoCodeFactory.WebHost.Controllers
         }
 
         /// <summary>
+        /// Создать нового сотрудника
+        /// </summary>
+        /// <param name="employeeRequest">Данные по сотруднику</param>
+        /// <returns>Новый сотрудник</returns>
+        [HttpPost]
+        public async Task<ActionResult<EmployeeResponse>> CreateEmployeeAsync([FromBody] EmployeeRequest employeeRequest)
+        {
+            try
+            {
+                await _employeeRepository.AddAsync(new Employee
+                {
+                    LastName = employeeRequest.LastName,
+                    FirstName = employeeRequest.FirstName,
+                    Email = employeeRequest.Email,
+                });
+
+                return StatusCode(201);
+            }
+            catch (Exception)
+            {
+                return BadRequest();
+            }
+        }
+
+        /// <summary>
         /// Получить данные всех сотрудников
         /// </summary>
         /// <returns></returns>
@@ -50,25 +75,86 @@ namespace PromoCodeFactory.WebHost.Controllers
         [HttpGet("{id:guid}")]
         public async Task<ActionResult<EmployeeResponse>> GetEmployeeByIdAsync(Guid id)
         {
-            var employee = await _employeeRepository.GetByIdAsync(id);
-
-            if (employee == null)
-                return NotFound();
-
-            var employeeModel = new EmployeeResponse()
+            try
             {
-                Id = employee.Id,
-                Email = employee.Email,
-                Roles = employee.Roles.Select(x => new RoleItemResponse()
-                {
-                    Name = x.Name,
-                    Description = x.Description
-                }).ToList(),
-                FullName = employee.FullName,
-                AppliedPromocodesCount = employee.AppliedPromocodesCount
-            };
+                var employee = await _employeeRepository.GetByIdAsync(id);
 
-            return employeeModel;
+                if (employee == null)
+                    return NotFound();
+
+                var employeeModel = new EmployeeResponse()
+                {
+                    Id = employee.Id,
+                    Email = employee.Email,
+                    Roles = employee.Roles.Select(x => new RoleItemResponse()
+                    {
+                        Name = x.Name,
+                        Description = x.Description
+                    }).ToList(),
+                    FullName = employee.FullName,
+                    AppliedPromocodesCount = employee.AppliedPromocodesCount
+                };
+
+                return employeeModel;
+            }
+            catch (Exception)
+            {
+                return BadRequest();
+            }
+        }
+
+        /// <summary>
+        /// Обновление данных сотрудника
+        /// </summary>
+        /// <param name="updateEmployeeRequest">Данные для обновления</param>
+        [HttpPut]
+        public async Task<IActionResult> UpdateEmployeeAsync(UpdateEmployeeRequest updateEmployeeRequest)
+        {
+            try
+            {
+                var employee = await _employeeRepository.GetByIdAsync(updateEmployeeRequest.Id);
+
+                if (employee == null)
+                    return NotFound();
+
+                await _employeeRepository.UpdateAsync(new Employee
+                {
+                    Id = updateEmployeeRequest.Id,
+                    Email = updateEmployeeRequest.Email,
+                    FirstName = updateEmployeeRequest.FirstName,
+                    LastName = updateEmployeeRequest.LastName,
+                });
+
+                return Ok();
+            }
+            catch (Exception)
+            {
+                return BadRequest();
+            }
+        }
+
+        /// <summary>
+        /// Удалить сотрудника
+        /// </summary>
+        /// <param name="id">Id сотрудника</param>
+        [HttpDelete("{id:guid}")]
+        public async Task<IActionResult> DeleteEmployeeByIdAsync(Guid id)
+        {
+            try
+            {
+                var employee = await _employeeRepository.GetByIdAsync(id);
+
+                if (employee == null)
+                    return NotFound();
+
+                await _employeeRepository.DeleteAsync(id);
+
+                return Ok();
+            }
+            catch (Exception)
+            {
+                return BadRequest();
+            }
         }
     }
 }
