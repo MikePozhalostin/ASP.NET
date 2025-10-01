@@ -75,7 +75,7 @@ namespace PromoCodeFactory.WebHost.Controllers
         }
         
         [HttpPost("{id}/limits")]
-        public async Task<IActionResult> SetPartnerPromoCodeLimitAsync(Guid id, SetPartnerPromoCodeLimitRequest request)
+        public async Task<ActionResult<PartnerResponse>> SetPartnerPromoCodeLimitAsync(Guid id, SetPartnerPromoCodeLimitRequest request)
         {
             var partner = await _partnersRepository.GetByIdAsync(id);
 
@@ -85,7 +85,11 @@ namespace PromoCodeFactory.WebHost.Controllers
             //Если партнер заблокирован, то нужно выдать исключение
             if (!partner.IsActive)
                 return BadRequest("Данный партнер не активен");
-            
+
+            //Если новый лимит не валиден, не нужно затирать старые данные
+            if (request.Limit <= 0)
+                return BadRequest("Лимит должен быть больше 0");
+
             //Установка лимита партнеру
             var activeLimit = partner.PartnerLimits.FirstOrDefault(x => 
                 !x.CancelDate.HasValue);
@@ -101,9 +105,6 @@ namespace PromoCodeFactory.WebHost.Controllers
                 activeLimit.CancelDate = DateTime.Now;
             }
 
-            if (request.Limit <= 0)
-                return BadRequest("Лимит должен быть больше 0");
-            
             var newLimit = new PartnerPromoCodeLimit()
             {
                 Limit = request.Limit,
@@ -115,9 +116,31 @@ namespace PromoCodeFactory.WebHost.Controllers
             
             partner.PartnerLimits.Add(newLimit);
 
-            await _partnersRepository.UpdateAsync(partner);
+            try
+            {
+                await _partnersRepository.UpdateAsync(partner);
+            }
+            catch (Exception)
+            {
+                return BadRequest("Ошибка обновления данных");
+            }
             
-            return CreatedAtAction(nameof(GetPartnerLimitAsync), new {id = partner.Id, limitId = newLimit.Id}, null);
+            return new PartnerResponse
+            {
+                Id = partner.Id,
+                IsActive = partner.IsActive,
+                Name = partner.Name,
+                NumberIssuedPromoCodes= partner.NumberIssuedPromoCodes,
+                PartnerLimits = partner.PartnerLimits.Select(l => new PartnerPromoCodeLimitResponse
+                {
+                    Limit = l.Limit,
+                    Id = l.Id,
+                    CancelDate = l.CancelDate?.ToString(),
+                    CreateDate = l.CreateDate.ToString(),
+                    EndDate = l.EndDate.ToString(),
+                    PartnerId = l.PartnerId
+                }).ToList(),
+            };
         }
         
         [HttpPost("{id}/canceledLimits")]
