@@ -1,9 +1,12 @@
 services:
   promocodefactory.webhost:
     image: ${DOCKER_REGISTRY-}promocodefactorywebhost
+    container_name: promocodefactory
     build:
       context: .
       dockerfile: PromoCodeFactory.WebHost/Dockerfile
+    ports:
+       - "8080:8080"
     depends_on:
       - postgres
 
@@ -12,7 +15,7 @@ services:
     container_name: postgres_container
     restart: always
     ports:
-      - 5434:5432
+      - "5432:5432"
     environment:
       POSTGRES_DB: postgres_db
       POSTGRES_USER: postgres_user

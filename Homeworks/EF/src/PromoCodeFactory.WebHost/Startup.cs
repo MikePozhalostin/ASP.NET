@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using PromoCodeFactory.Core.Abstractions.Repositories;
 using PromoCodeFactory.DataAccess.Data;
+using PromoCodeFactory.DataAccess.Interfaces;
 using PromoCodeFactory.DataAccess.Repositories;
 
 namespace PromoCodeFactory.WebHost
@@ -24,6 +25,7 @@ namespace PromoCodeFactory.WebHost
         {
             services.AddControllers();
 
+            services.AddScoped<IDataContextInitializer, DataContextInitializer>();
             services.AddDbContext<DataContext>(d =>
             {
                 d.UseNpgsql(_configuration.GetConnectionString("DefaultConnection")
@@ -32,8 +34,8 @@ namespace PromoCodeFactory.WebHost
 
                 //d.UseSqlite("Data Source=MyDatabase.db");
                 d.UseLazyLoadingProxies();
-                d.UseAsyncSeeding(async (context, _, ct) => await DataContextInitializer.SeedAsync((DataContext)context, ct));
-                d.UseSeeding((context, _) => DataContextInitializer.Seed((DataContext)context));
+                //d.UseAsyncSeeding(async (context, _, ct) => await DataContextInitializer.SeedAsync((DataContext)context, ct));
+                //d.UseSeeding((context, _) => DataContextInitializer.Seed((DataContext)context));
             });
 
             services.AddScoped(typeof(IRepository<>), typeof(EfRepository<>));
@@ -46,7 +48,7 @@ namespace PromoCodeFactory.WebHost
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IDataContextInitializer dataContextInitializer)
         {
             if (env.IsDevelopment())
             {
@@ -63,13 +65,6 @@ namespace PromoCodeFactory.WebHost
                 x.DocExpansion = "list";
             });
 
-            using var scope = app.ApplicationServices.CreateScope();
-            var db = scope.ServiceProvider.GetRequiredService<DataContext>();
-
-            //db.Database.EnsureDeletedAsync();
-            db.Database.EnsureCreatedAsync();
-            db.Database.MigrateAsync();
-
             app.UseHttpsRedirection();
 
             app.UseRouting();
@@ -78,6 +73,8 @@ namespace PromoCodeFactory.WebHost
             {
                 endpoints.MapControllers();
             });
+
+            dataContextInitializer.Seed();
         }
     }
 }
