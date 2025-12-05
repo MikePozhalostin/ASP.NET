@@ -1,13 +1,15 @@
-﻿using System;
+﻿using MassTransit;
+using Microsoft.AspNetCore.Mvc;
+using Pcf.ReceivingFromPartner.Core.Abstractions.Gateways;
+using Pcf.ReceivingFromPartner.Core.Abstractions.Repositories;
+using Pcf.ReceivingFromPartner.Core.Domain;
+using Pcf.ReceivingFromPartner.Integration.Dto;
+using Pcf.ReceivingFromPartner.WebHost.Mappers;
+using Pcf.ReceivingFromPartner.WebHost.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Pcf.ReceivingFromPartner.Core.Abstractions.Repositories;
-using Pcf.ReceivingFromPartner.Core.Domain;
-using Pcf.ReceivingFromPartner.Core.Abstractions.Gateways;
-using Pcf.ReceivingFromPartner.WebHost.Models;
-using Pcf.ReceivingFromPartner.WebHost.Mappers;
 
 namespace Pcf.ReceivingFromPartner.WebHost.Controllers
 {
@@ -22,20 +24,17 @@ namespace Pcf.ReceivingFromPartner.WebHost.Controllers
         private readonly IRepository<Partner> _partnersRepository;
         private readonly IRepository<Preference> _preferencesRepository;
         private readonly INotificationGateway _notificationGateway;
-        private readonly IGivingPromoCodeToCustomerGateway _givingPromoCodeToCustomerGateway;
-        private readonly IAdministrationGateway _administrationGateway;
+        private readonly IBusControl _busControl;
 
         public PartnersController(IRepository<Partner> partnersRepository,
             IRepository<Preference> preferencesRepository,
             INotificationGateway notificationGateway,
-            IGivingPromoCodeToCustomerGateway givingPromoCodeToCustomerGateway,
-            IAdministrationGateway administrationGateway)
+            IBusControl busControl)
         {
             _partnersRepository = partnersRepository;
             _preferencesRepository = preferencesRepository;
             _notificationGateway = notificationGateway;
-            _givingPromoCodeToCustomerGateway = givingPromoCodeToCustomerGateway;
-            _administrationGateway = administrationGateway;
+            _busControl = busControl;
         }
 
         /// <summary>
@@ -330,16 +329,22 @@ namespace Pcf.ReceivingFromPartner.WebHost.Controllers
 
             await _partnersRepository.UpdateAsync(partner);
 
-            //TODO: Чтобы информация о том, что промокод был выдан парнером была отправлена
-            //в микросервис рассылки клиентам нужно либо вызвать его API, либо отправить событие в очередь
-            await _givingPromoCodeToCustomerGateway.GivePromoCodeToCustomer(promoCode);
-
-            //TODO: Чтобы информация о том, что промокод был выдан парнером была отправлена
-            //в микросервис администрирования нужно либо вызвать его API, либо отправить событие в очередь
+            var endpoint = await _busControl.GetSendEndpoint(new Uri("queue:promoCodes"));
+            await endpoint.Send(new GivePromoCodeToCustomerDto
+            {
+                PartnerId = promoCode.Partner.Id,
+                BeginDate = promoCode.BeginDate.ToShortDateString(),
+                EndDate = promoCode.EndDate.ToShortDateString(),
+                PreferenceId = promoCode.PreferenceId,
+                PromoCode = promoCode.Code,
+                ServiceInfo = promoCode.ServiceInfo,
+                PartnerManagerId = promoCode.PartnerManagerId
+            });
 
             if (request.PartnerManagerId.HasValue)
             {
-                await _administrationGateway.NotifyAdminAboutPartnerManagerPromoCode(request.PartnerManagerId.Value);
+                endpoint = await _busControl.GetSendEndpoint(new Uri("queue:promoCodeForPartner"));
+                await endpoint.Send(request.PartnerManagerId.Value);
             }
 
             return CreatedAtAction(nameof(GetPartnerPromoCodeAsync),

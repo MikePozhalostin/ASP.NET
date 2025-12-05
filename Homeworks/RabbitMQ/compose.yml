@@ -41,8 +41,8 @@ services:
       - "8092:8080"
     environment:
       - "ConnectionStrings:PromocodeFactoryReceivingFromPartnerDb=Host=promocode-factory-receiving-from-partner-db;Database=promocode_factory_receiving_from_partner_db;Username=postgres;Password=docker"
-      - "IntegrationSettings:GivingToCustomerApiUrl=http://promocode-factory-giving-to-customer-api"    
-      - "IntegrationSettings:AdministrationApiUrl=http://promocode-factory-administration-api"       
+      - "IntegrationSettings:GivingToCustomerApiUrl=http://promocode-factory-giving-to-customer-api"
+      - "IntegrationSettings:AdministrationApiUrl=http://promocode-factory-administration-api"
     depends_on: 
       - promocode-factory-receiving-from-partner-db
   
@@ -67,3 +67,20 @@ services:
       - "ConnectionStrings:PromocodeFactoryGivingToCustomerDb=Host=promocode-factory-giving-to-customer-db;Database=promocode_factory_giving_to_customer_db;Username=postgres;Password=docker"          
     depends_on: 
       - promocode-factory-giving-to-customer-db
+    
+  # Rabbit
+  rabbit-promo:
+    image: rabbitmq:3-management
+    restart: always
+    hostname: rabbitmqhost
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    ports:
+      - "45672:5672"
+      - "35672:15672"
+
+volumes:
+  rabbitmq_data:
