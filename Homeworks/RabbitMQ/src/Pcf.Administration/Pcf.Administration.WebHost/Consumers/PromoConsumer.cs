@@ -1,12 +1,13 @@
 ﻿using MassTransit;
 using Pcf.Administration.Core.Abstractions.Repositories;
 using Pcf.Administration.Core.Domain.Administration;
+using Pcf.Administration.WebHost.Models;
 using System;
 using System.Threading.Tasks;
 
 namespace Pcf.Administration.WebHost.Consumers
 {
-    public class PromoConsumer : IConsumer<string>
+    public class PromoConsumer : IConsumer<AdminPartnerMessage>
     {
         private readonly IRepository<Employee> _employeeRepository;
 
@@ -15,25 +16,18 @@ namespace Pcf.Administration.WebHost.Consumers
             _employeeRepository = employeeRepository;
         }
 
-        public async Task Consume(ConsumeContext<string> context)
+        public async Task Consume(ConsumeContext<AdminPartnerMessage> context)
         {
-            if (Guid.TryParse(context.Message, out var id))
-            {
-                Console.WriteLine(context.Message);
+            Console.WriteLine($"Receive parnter id: {context.Message.ParnterId}");
 
-                var employee = await _employeeRepository.GetByIdAsync(id);
+            var employee = await _employeeRepository.GetByIdAsync(context.Message.ParnterId);
 
-                if (employee == null)
-                    return;
+            if (employee == null)
+                return;
 
-                employee.AppliedPromocodesCount++;
+            employee.AppliedPromocodesCount++;
 
-                await _employeeRepository.UpdateAsync(employee);
-            }
-            else
-            {
-                Console.WriteLine($"Message is not valid: {context.Message}");
-            }
+            await _employeeRepository.UpdateAsync(employee);
         }
     }
 }

@@ -344,7 +344,7 @@ namespace Pcf.ReceivingFromPartner.WebHost.Controllers
             if (request.PartnerManagerId.HasValue)
             {
                 endpoint = await _busControl.GetSendEndpoint(new Uri("queue:promoCodeForPartner"));
-                await endpoint.Send(request.PartnerManagerId.Value);
+                await endpoint.Send(new AdminPartnerMessage { ParnterId = request.PartnerManagerId.Value });
             }
 
             return CreatedAtAction(nameof(GetPartnerPromoCodeAsync),

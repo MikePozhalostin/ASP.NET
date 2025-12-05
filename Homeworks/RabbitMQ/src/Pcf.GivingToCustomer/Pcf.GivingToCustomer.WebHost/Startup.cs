@@ -105,7 +105,6 @@ namespace Pcf.GivingToCustomer.WebHost
         {
             var rmqSettings = configuration.GetSection("RabbitMqConfiguration").Get<RabbitMqConfiguration>();
             configurator.Host(rmqSettings.Host,
-                rmqSettings.Port,
                 rmqSettings.VHost,
                 h =>
                 {
@@ -121,7 +120,7 @@ namespace Pcf.GivingToCustomer.WebHost
         /// <param name="context"></param>
         private static void RegisterEndPoints(IRabbitMqBusFactoryConfigurator configurator, IBusRegistrationContext context)
         {
-            configurator.ReceiveEndpoint($"queue:promoCodes", e =>
+            configurator.ReceiveEndpoint($"promoCodes", e =>
             {
                 e.ConfigureConsumer<PromoConsumer>(context);
                 e.UseMessageRetry(r =>

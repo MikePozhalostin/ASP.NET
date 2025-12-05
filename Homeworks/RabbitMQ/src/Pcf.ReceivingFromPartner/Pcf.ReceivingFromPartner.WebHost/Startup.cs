@@ -109,7 +109,6 @@ namespace Pcf.ReceivingFromPartner.WebHost
         {
             var rmqSettings = configuration.GetSection("RabbitMqConfiguration").Get<RabbitMqConfiguration>();
             configurator.Host(rmqSettings.Host,
-                rmqSettings.Port,
                 rmqSettings.VHost,
                 h =>
                 {
