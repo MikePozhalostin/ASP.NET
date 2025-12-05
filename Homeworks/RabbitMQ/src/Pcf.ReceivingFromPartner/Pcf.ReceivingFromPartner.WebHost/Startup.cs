@@ -107,7 +107,7 @@ namespace Pcf.ReceivingFromPartner.WebHost
         /// <param name="configuration"> Конфигурация приложения. </param>
         private static void ConfigureRmq(IRabbitMqBusFactoryConfigurator configurator, IConfiguration configuration)
         {
-            var rmqSettings = configuration.Get<RabbitMqConfiguration>();
+            var rmqSettings = configuration.GetSection("RabbitMqConfiguration").Get<RabbitMqConfiguration>();
             configurator.Host(rmqSettings.Host,
                 rmqSettings.Port,
                 rmqSettings.VHost,
