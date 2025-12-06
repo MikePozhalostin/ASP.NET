@@ -8,16 +8,13 @@ COPY Pcf.ReceivingFromPartner/Pcf.ReceivingFromPartner.Core/Pcf.ReceivingFromPar
 COPY Pcf.ReceivingFromPartner/Pcf.ReceivingFromPartner.DataAccess/Pcf.ReceivingFromPartner.DataAccess.csproj Pcf.ReceivingFromPartner/Pcf.ReceivingFromPartner.DataAccess/
 COPY Pcf.ReceivingFromPartner/Pcf.ReceivingFromPartner.Integration/Pcf.ReceivingFromPartner.Integration.csproj Pcf.ReceivingFromPartner/Pcf.ReceivingFromPartner.Integration/
 
-
 RUN dotnet restore Pcf.ReceivingFromPartner/Pcf.ReceivingFromPartner.WebHost/Pcf.ReceivingFromPartner.WebHost.csproj
 
 COPY . .
 
-# Publish WebHost
 WORKDIR /src/Pcf.ReceivingFromPartner/Pcf.ReceivingFromPartner.WebHost
 RUN dotnet publish -c Release -o /app/publish
 
-# STAGE 2 — Runtime image
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
 COPY --from=build /app/publish .
