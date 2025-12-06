@@ -1,4 +1,5 @@
 ﻿using MassTransit;
+using Microsoft.Extensions.Logging;
 using Pcf.Administration.Core.Abstractions.Repositories;
 using Pcf.Administration.Core.Domain.Administration;
 using Pcf.Administration.WebHost.Models;
@@ -10,15 +11,17 @@ namespace Pcf.Administration.WebHost.Consumers
     public class PromoConsumer : IConsumer<AdminPartnerMessage>
     {
         private readonly IRepository<Employee> _employeeRepository;
+        private readonly ILogger<PromoConsumer> _logger;
 
-        public PromoConsumer(IRepository<Employee> employeeRepository)
+        public PromoConsumer(IRepository<Employee> employeeRepository, ILogger<PromoConsumer> logger)
         {
             _employeeRepository = employeeRepository;
+            _logger = logger;
         }
 
         public async Task Consume(ConsumeContext<AdminPartnerMessage> context)
         {
-            Console.WriteLine($"Receive parnter id: {context.Message.ParnterId}");
+            _logger.LogInformation($"Receive parnter id: {context.Message.ParnterId}");
 
             var employee = await _employeeRepository.GetByIdAsync(context.Message.ParnterId);
 

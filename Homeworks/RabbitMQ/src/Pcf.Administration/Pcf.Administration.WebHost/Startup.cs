@@ -11,7 +11,6 @@ using Pcf.Administration.DataAccess.Data;
 using Pcf.Administration.Core.Abstractions.Repositories;
 using System;
 using MassTransit;
-using Pcf.Administration.WebHost.Services;
 using Pcf.Administration.WebHost.Consumers;
 using Pcf.Administration.WebHost.Configurations;
 
@@ -51,8 +50,6 @@ namespace Pcf.Administration.WebHost
                     RegisterEndPoints(cfg, context);
                 });
             });
-
-            services.AddHostedService<MasstransitHostedService>();
 
             AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 

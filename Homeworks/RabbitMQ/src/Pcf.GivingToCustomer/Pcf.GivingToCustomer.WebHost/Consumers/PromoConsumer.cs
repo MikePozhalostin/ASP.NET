@@ -1,4 +1,5 @@
 ﻿using MassTransit;
+using Microsoft.Extensions.Logging;
 using Pcf.GivingToCustomer.Core.Abstractions.Repositories;
 using Pcf.GivingToCustomer.Core.Domain;
 using Pcf.GivingToCustomer.WebHost.Mappers;
@@ -14,18 +15,20 @@ namespace Pcf.GivingToCustomer.WebHost.Consumers
         private readonly IRepository<PromoCode> _promoCodesRepository;
         private readonly IRepository<Preference> _preferencesRepository;
         private readonly IRepository<Customer> _customersRepository;
+        private readonly ILogger<PromoConsumer> _logger;
 
         public PromoConsumer(IRepository<PromoCode> promoCodesRepository,
-            IRepository<Preference> preferencesRepository, IRepository<Customer> customersRepository)
+            IRepository<Preference> preferencesRepository, IRepository<Customer> customersRepository, ILogger<PromoConsumer> logger)
         {
             _promoCodesRepository = promoCodesRepository;
             _preferencesRepository = preferencesRepository;
             _customersRepository = customersRepository;
+            _logger = logger;
         }
 
         public async Task Consume(ConsumeContext<GivePromoCodeRequest> context)
         {
-            Console.WriteLine($"Receive message for preference: {context.Message.PreferenceId}");
+            _logger.LogInformation($"Receive message for preference: {context.Message.PreferenceId}");
             //Получаем предпочтение по имени
             var preference = await _preferencesRepository.GetByIdAsync(context.Message.PreferenceId);
 

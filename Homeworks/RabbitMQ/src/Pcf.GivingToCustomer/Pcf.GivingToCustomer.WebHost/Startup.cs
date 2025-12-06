@@ -13,7 +13,6 @@ using Pcf.GivingToCustomer.DataAccess;
 using Pcf.GivingToCustomer.DataAccess.Repositories;
 using Pcf.GivingToCustomer.Integration;
 using MassTransit;
-using Pcf.GivingToCustomer.WebHost.Services;
 using Pcf.GivingToCustomer.WebHost.Consumers;
 using Pcf.GivingToCustomer.WebHost.Configurations;
 
@@ -54,8 +53,6 @@ namespace Pcf.GivingToCustomer.WebHost
                     RegisterEndPoints(cfg, context);
                 });
             });
-
-            services.AddHostedService<MasstransitHostedService>();
 
             AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
