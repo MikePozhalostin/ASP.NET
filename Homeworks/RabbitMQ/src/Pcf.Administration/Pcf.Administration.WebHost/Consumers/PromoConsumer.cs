@@ -2,13 +2,12 @@
 using Microsoft.Extensions.Logging;
 using Pcf.Administration.Core.Abstractions.Repositories;
 using Pcf.Administration.Core.Domain.Administration;
-using Pcf.Administration.WebHost.Models;
-using System;
+using Pcf.Common;
 using System.Threading.Tasks;
 
 namespace Pcf.Administration.WebHost.Consumers
 {
-    public class PromoConsumer : IConsumer<AdminPartnerMessage>
+    public class PromoConsumer : IConsumer<GivedPromoForPartnerMessage>
     {
         private readonly IRepository<Employee> _employeeRepository;
         private readonly ILogger<PromoConsumer> _logger;
@@ -19,7 +18,7 @@ namespace Pcf.Administration.WebHost.Consumers
             _logger = logger;
         }
 
-        public async Task Consume(ConsumeContext<AdminPartnerMessage> context)
+        public async Task Consume(ConsumeContext<GivedPromoForPartnerMessage> context)
         {
             _logger.LogInformation($"Receive parnter id: {context.Message.ParnterId}");
 

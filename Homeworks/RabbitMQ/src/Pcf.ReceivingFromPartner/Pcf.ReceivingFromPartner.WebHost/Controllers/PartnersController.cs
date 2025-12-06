@@ -1,5 +1,7 @@
 ﻿using MassTransit;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using Pcf.Common;
 using Pcf.ReceivingFromPartner.Core.Abstractions.Gateways;
 using Pcf.ReceivingFromPartner.Core.Abstractions.Repositories;
 using Pcf.ReceivingFromPartner.Core.Domain;
@@ -25,16 +27,19 @@ namespace Pcf.ReceivingFromPartner.WebHost.Controllers
         private readonly IRepository<Preference> _preferencesRepository;
         private readonly INotificationGateway _notificationGateway;
         private readonly IBusControl _busControl;
+        private readonly ILogger<PartnersController> _logger;
 
         public PartnersController(IRepository<Partner> partnersRepository,
             IRepository<Preference> preferencesRepository,
             INotificationGateway notificationGateway,
-            IBusControl busControl)
+            IBusControl busControl,
+            ILogger<PartnersController> logger)
         {
             _partnersRepository = partnersRepository;
             _preferencesRepository = preferencesRepository;
             _notificationGateway = notificationGateway;
             _busControl = busControl;
+            _logger = logger;
         }
 
         /// <summary>
@@ -329,8 +334,10 @@ namespace Pcf.ReceivingFromPartner.WebHost.Controllers
 
             await _partnersRepository.UpdateAsync(partner);
 
+            _logger.LogInformation("Send information about promocode for customer with partner id: {partnerId}", request.PartnerManagerId.Value);
+
             var endpoint = await _busControl.GetSendEndpoint(new Uri("queue:promoCodes"));
-            await endpoint.Send(new GivePromoCodeToCustomerDto
+            await endpoint.Send(new GivedPromoCodeMessage
             {
                 PartnerId = promoCode.Partner.Id,
                 BeginDate = promoCode.BeginDate.ToShortDateString(),
@@ -338,13 +345,14 @@ namespace Pcf.ReceivingFromPartner.WebHost.Controllers
                 PreferenceId = promoCode.PreferenceId,
                 PromoCode = promoCode.Code,
                 ServiceInfo = promoCode.ServiceInfo,
-                PartnerManagerId = promoCode.PartnerManagerId
+                PartnerManagerId = promoCode.PartnerManagerId.Value
             });
 
             if (request.PartnerManagerId.HasValue)
             {
+                _logger.LogInformation("Send information about promocode for partner id: {partnerId}", request.PartnerManagerId.Value);
                 endpoint = await _busControl.GetSendEndpoint(new Uri("queue:promoCodeForPartner"));
-                await endpoint.Send(new AdminPartnerMessage { ParnterId = request.PartnerManagerId.Value });
+                await endpoint.Send(new GivedPromoForPartnerMessage { ParnterId = request.PartnerManagerId.Value });
             }
 
             return CreatedAtAction(nameof(GetPartnerPromoCodeAsync),
