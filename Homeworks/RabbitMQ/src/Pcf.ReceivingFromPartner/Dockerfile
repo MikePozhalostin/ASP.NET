@@ -1,21 +1,21 @@
-# Prepare the build stage
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-WORKDIR /app
+WORKDIR /src
 
-# Copy the solution file and project files, then restore dependencies
-COPY *.sln .
-COPY */*.csproj ./
-RUN for file in $(ls *.csproj); do mkdir -p ${file%.*} && mv $file ${file%.*}; done
-RUN dotnet restore
+COPY Pcf.Common/Pcf.Common.csproj Pcf.Common/
 
-# Copy the remaining files and publish the application
-COPY . ./aspnetapp
-WORKDIR /app/aspnetapp
-RUN dotnet publish -c Release -o out
+COPY Pcf.ReceivingFromPartner/Pcf.ReceivingFromPartner.WebHost/Pcf.ReceivingFromPartner.WebHost.csproj Pcf.ReceivingFromPartner/Pcf.ReceivingFromPartner.WebHost/
+COPY Pcf.ReceivingFromPartner/Pcf.ReceivingFromPartner.Core/Pcf.ReceivingFromPartner.Core.csproj Pcf.ReceivingFromPartner/Pcf.ReceivingFromPartner.Core/
+COPY Pcf.ReceivingFromPartner/Pcf.ReceivingFromPartner.DataAccess/Pcf.ReceivingFromPartner.DataAccess.csproj Pcf.ReceivingFromPartner/Pcf.ReceivingFromPartner.DataAccess/
+COPY Pcf.ReceivingFromPartner/Pcf.ReceivingFromPartner.Integration/Pcf.ReceivingFromPartner.Integration.csproj Pcf.ReceivingFromPartner/Pcf.ReceivingFromPartner.Integration/
 
-# Use the .NET 8 runtime for the final stage
+RUN dotnet restore Pcf.ReceivingFromPartner/Pcf.ReceivingFromPartner.WebHost/Pcf.ReceivingFromPartner.WebHost.csproj
+
+COPY . .
+
+WORKDIR /src/Pcf.ReceivingFromPartner/Pcf.ReceivingFromPartner.WebHost
+RUN dotnet publish -c Release -o /app/publish
+
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
-COPY --from=build /app/aspnetapp/out ./
-EXPOSE 8080
+COPY --from=build /app/publish .
 ENTRYPOINT ["dotnet", "Pcf.ReceivingFromPartner.WebHost.dll"]

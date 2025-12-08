@@ -12,6 +12,8 @@ using Pcf.ReceivingFromPartner.DataAccess;
 using Pcf.ReceivingFromPartner.DataAccess.Repositories;
 using Pcf.ReceivingFromPartner.DataAccess.Data;
 using Pcf.ReceivingFromPartner.Integration;
+using MassTransit;
+using Pcf.ReceivingFromPartner.WebHost.Configurations;
 
 namespace Pcf.ReceivingFromPartner.WebHost
 {
@@ -33,6 +35,13 @@ namespace Pcf.ReceivingFromPartner.WebHost
             services.AddScoped(typeof(IRepository<>), typeof(EfRepository<>));
             services.AddScoped<INotificationGateway, NotificationGateway>();
             services.AddScoped<IDbInitializer, EfDbInitializer>();
+
+            services.AddMassTransit(x => {
+                x.UsingRabbitMq((context, cfg) =>
+                {
+                    ConfigureRmq(cfg, Configuration);
+                });
+            });
 
             services.AddHttpClient<IGivingPromoCodeToCustomerGateway, GivingPromoCodeToCustomerGateway>(c =>
             {
@@ -89,6 +98,23 @@ namespace Pcf.ReceivingFromPartner.WebHost
             });
 
             dbInitializer.InitializeDb();
+        }
+
+        /// <summary>
+        /// Конфигурирование RMQ.
+        /// </summary>
+        /// <param name="configurator"> Конфигуратор RMQ. </param>
+        /// <param name="configuration"> Конфигурация приложения. </param>
+        private static void ConfigureRmq(IRabbitMqBusFactoryConfigurator configurator, IConfiguration configuration)
+        {
+            var rmqSettings = configuration.GetSection("RabbitMqConfiguration").Get<RabbitMqConfiguration>();
+            configurator.Host(rmqSettings.Host,
+                rmqSettings.VHost,
+                h =>
+                {
+                    h.Username(rmqSettings.Login);
+                    h.Password(rmqSettings.Password);
+                });
         }
     }
 }
