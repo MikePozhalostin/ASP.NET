@@ -5,40 +5,43 @@ using Pcf.GivingToCustomer.Grpc;
 using System;
 using System.Threading.Tasks;
 
-public class CustomerGrpcService : CustomerService.CustomerServiceBase
+namespace Pcf.GivingToCustomer.WebHost.Grpc
 {
-    private readonly IRepository<Customer> _repository;
-
-    public CustomerGrpcService(IRepository<Customer> repository)
+    public class CustomerGrpcService : CustomerService.CustomerServiceBase
     {
-        _repository = repository;
-    }
+        private readonly IRepository<Customer> _repository;
 
-    public override async Task<CustomerReply> GetCustomer(
-        GetCustomerRequest request,
-        ServerCallContext context)
-    {
-        if (!Guid.TryParse(request.Id, out var customerId))
+        public CustomerGrpcService(IRepository<Customer> repository)
         {
-            throw new RpcException(new Status(
-                StatusCode.InvalidArgument,
-                "Invalid GUID format"));
+            _repository = repository;
         }
 
-        var customer = await _repository.GetByIdAsync(customerId);
-
-        if (customer == null)
+        public override async Task<CustomerReply> GetCustomer(
+            GetCustomerRequest request,
+            ServerCallContext context)
         {
-            throw new RpcException(new Status(
-                StatusCode.NotFound,
-                "Customer not found"));
+            if (!Guid.TryParse(request.Id, out var customerId))
+            {
+                throw new RpcException(new Status(
+                    StatusCode.InvalidArgument,
+                    "Invalid GUID format"));
+            }
+
+            var customer = await _repository.GetByIdAsync(customerId);
+
+            if (customer == null)
+            {
+                throw new RpcException(new Status(
+                    StatusCode.NotFound,
+                    "Customer not found"));
+            }
+
+            return new CustomerReply
+            {
+                Id = customer.Id.ToString(),
+                Name = customer.FullName,
+                Email = customer.Email
+            };
         }
-
-        return new CustomerReply
-        {
-            Id = customer.Id.ToString(),
-            Name = customer.FullName,
-            Email = customer.Email
-        };
     }
 }

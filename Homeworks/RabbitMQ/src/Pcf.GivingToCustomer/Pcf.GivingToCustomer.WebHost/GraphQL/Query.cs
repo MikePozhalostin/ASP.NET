@@ -4,10 +4,13 @@ using Pcf.GivingToCustomer.Core.Domain;
 using System;
 using System.Threading.Tasks;
 
-public class Query
+namespace Pcf.GivingToCustomer.WebHost.GraphQL
 {
-    public Task<Customer> GetCustomer(Guid id, [Service] IRepository<Customer> repository)
+    public class Query
     {
-        return repository.GetByIdAsync(id);
+        public Task<Customer> GetCustomer(Guid id, [Service] IRepository<Customer> repository)
+        {
+            return repository.GetByIdAsync(id);
+        }
     }
 }

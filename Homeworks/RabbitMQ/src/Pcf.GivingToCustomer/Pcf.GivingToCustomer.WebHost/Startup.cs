@@ -13,9 +13,10 @@ using Pcf.GivingToCustomer.DataAccess.Repositories;
 using Pcf.GivingToCustomer.Integration;
 using Pcf.GivingToCustomer.WebHost.Configurations;
 using Pcf.GivingToCustomer.WebHost.Consumers;
+using Pcf.GivingToCustomer.WebHost.Grpc;
 using System;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 using IConfiguration = Microsoft.Extensions.Configuration.IConfiguration;
+using Query = Pcf.GivingToCustomer.WebHost.GraphQL.Query;
 
 namespace Pcf.GivingToCustomer.WebHost
 {
