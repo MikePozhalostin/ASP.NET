@@ -1,20 +1,22 @@
-using System;
+using MassTransit;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Configuration;
-using IConfiguration = Microsoft.Extensions.Configuration.IConfiguration;
-using Pcf.GivingToCustomer.Core.Abstractions.Repositories;
 using Pcf.GivingToCustomer.Core.Abstractions.Gateways;
-using Pcf.GivingToCustomer.DataAccess.Data;
+using Pcf.GivingToCustomer.Core.Abstractions.Repositories;
 using Pcf.GivingToCustomer.DataAccess;
+using Pcf.GivingToCustomer.DataAccess.Data;
 using Pcf.GivingToCustomer.DataAccess.Repositories;
 using Pcf.GivingToCustomer.Integration;
-using MassTransit;
-using Pcf.GivingToCustomer.WebHost.Consumers;
 using Pcf.GivingToCustomer.WebHost.Configurations;
+using Pcf.GivingToCustomer.WebHost.Consumers;
+using Pcf.GivingToCustomer.WebHost.Grpc;
+using System;
+using IConfiguration = Microsoft.Extensions.Configuration.IConfiguration;
+using Query = Pcf.GivingToCustomer.WebHost.GraphQL.Query;
 
 namespace Pcf.GivingToCustomer.WebHost
 {
@@ -38,8 +40,8 @@ namespace Pcf.GivingToCustomer.WebHost
             services.AddScoped<IDbInitializer, EfDbInitializer>();
             services.AddDbContext<DataContext>(x =>
             {
-                //x.UseSqlite("Filename=PromocodeFactoryGivingToCustomerDb.sqlite");
-                x.UseNpgsql(Configuration.GetConnectionString("PromocodeFactoryGivingToCustomerDb"));
+                x.UseSqlite("Filename=PromocodeFactoryGivingToCustomerDb.sqlite");
+                //x.UseNpgsql(Configuration.GetConnectionString("PromocodeFactoryGivingToCustomerDb"));
                 x.UseSnakeCaseNamingConvention();
                 x.UseLazyLoadingProxies();
             });
@@ -61,6 +63,11 @@ namespace Pcf.GivingToCustomer.WebHost
                 options.Title = "PromoCode Factory Giving To Customer API Doc";
                 options.Version = "1.0";
             });
+
+            services.AddGrpc();
+            services
+                .AddGraphQLServer()
+                .AddQueryType<Query>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -88,6 +95,8 @@ namespace Pcf.GivingToCustomer.WebHost
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+                endpoints.MapGrpcService<CustomerGrpcService>();
+                endpoints.MapGraphQL();
             });
 
             dbInitializer.InitializeDb();
